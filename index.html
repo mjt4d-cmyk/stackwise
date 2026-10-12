@@ -598,12 +598,13 @@ var COMPONENT_SRC = "\nclass Component extends DCLogic {\n  constructor(props) {
       // phone: the app fills the whole window, including behind the status bar and home bar;
       // content stays inside the safe area, the edges take the header / drawer colors
       var ins = insets();
-      // scale the whole 390 x 844 design to fit the visible area (like the design canvas)
-      sc = Math.min(vw / 390, (vh - ins.top - ins.bottom) / 844);
+      // always fill the full screen width; the layout's height adapts to the space available
+      // (only scale down on unusually short screens)
+      sc = Math.min(vw / 390, (vh - ins.top - ins.bottom) / 640);
       padTop = ins.top / sc;
       padBottom = ins.bottom / sc;
       var total = Math.floor(vh / sc);
-      H = Math.max(844, Math.floor(total - padTop - padBottom));
+      H = Math.max(640, Math.floor(total - padTop - padBottom));
       top = 0;
     }
     stage.style.transform = 'scale(' + sc + ')';
