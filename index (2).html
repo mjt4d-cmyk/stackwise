@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stackwise</title>
+<meta name="theme-color" content="#14202B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stackwise">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+/* Single dark look, matching the app's dark header. Stage is the 390px-wide phone design, scaled to fit. */
+:root { --ink: #14202B; --ground: #14202B; color-scheme: dark; }
+html, body { height: 100%; }
+/* Edges outside the app (status bar, Safari toolbars, home bar) match the app: dark header on top, light drawer below */
+html { background: linear-gradient(to bottom, #14202B 0%, #14202B 50%, #F4F6F8 50%, #F4F6F8 100%); background-attachment: fixed; }
+body { margin: 0; background: transparent; overflow: hidden; -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+#viewport { position: fixed; left: 0; right: 0; top: 0; bottom: 0; overflow: hidden; background: transparent; }
+#safe-probe { position: fixed; visibility: hidden; pointer-events: none; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+#app { box-sizing: content-box; }
+#stage { position: absolute; top: 0; width: 390px; transform-origin: 0 0; touch-action: manipulation; }
+#app > div { border-radius: 0 !important; }
+html:has(body.framed) { background: #E9E8E4; }
+body.framed, body.framed #viewport { background: #E9E8E4; }
+body.framed #stage { border-radius: 40px; overflow: hidden; box-shadow: 0 24px 60px rgba(20, 32, 43, 0.28), 0 0 0 1px rgba(20, 32, 43, 0.08); }
+button, input, select { font-family: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #F0B48C; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { #app * { transition: none !important; } }
+
+body{margin:0;background:#E9EDF1}
+a{color:#9A4A1A}a:hover{color:#6E3410}
+button{font-family:inherit;cursor:pointer}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]:focus{outline:2px solid #14202B;outline-offset:1px}
+.carousel{scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.carousel::-webkit-scrollbar{display:none}
+@keyframes swIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.sw-in{animation:swIn 420ms cubic-bezier(0.2,0.8,0.2,1) both}
+@media (prefers-reduced-motion: reduce){.sw-in{animation:none}}
+
+</style>
+</head>
+<body>
+<div id="safe-probe"></div>
+<div id="viewport"><div id="stage"><div id="app"></div></div></div>
+<template id="tpl">
+<div style="position: relative; width: 390px; height: {{appH}}px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F6F8; color: #14202B; font-family: 'IBM Plex Sans', system-ui, sans-serif; overflow: hidden">
+
+<sc-if value="{{isStart}}" hint-placeholder-val="{{ true }}">
+<div style="position: relative; height: {{appH}}px; overflow: hidden; background: #14202B; color: #FFFFFF">
+  <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; left: 28px; top: {{logoTop}}px; transform-origin: 0 0; transform: {{logoTf}}; transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1)"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"></path><path d="M3 8l9 5 9-5"></path><path d="M12 13v8"></path></svg>
+  <h1 style="position: absolute; left: 28px; top: {{titleTop}}px; margin: 0; white-space: nowrap; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 48px; line-height: 1; letter-spacing: -0.02em; color: #FFFFFF; transform-origin: 0 0; transform: {{titleTf}}; transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1)">Stackwise</h1>
+  <p style="position: absolute; left: 28px; right: 28px; top: {{taglineTop}}px; margin: 0; font-size: 20px; line-height: 1.35; color: #D6DDE3; opacity: {{taglineOpacity}}; transition: opacity 220ms ease">Count your boxes. Find the right truck or storage unit.</p>
+
+  <div aria-hidden="true" style="position: absolute; left: 20px; top: 20px; pointer-events: none; opacity: {{ghostOpacity}}; transition: opacity 280ms ease 220ms">
+    <sc-if value="{{ghostBack}}" hint-placeholder-val="{{ false }}">
+      <span style="min-height: 52px; box-sizing: border-box; padding: 0 4px; display: flex; align-items: center; gap: 4px; color: #FFFFFF; font-size: 17px; font-weight: 700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>Back</span>
+    </sc-if>
+    <sc-if value="{{ghostStart}}" hint-placeholder-val="{{ false }}">
+      <span style="min-height: 52px; box-sizing: border-box; padding: 0 4px; display: flex; align-items: center; color: #FFFFFF; font-size: 17px; font-weight: 700; text-decoration: none; gap: 4px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>Start over</span>
+    </sc-if>
+  </div>
+  <sc-if value="{{ghostStart}}" hint-placeholder-val="{{ false }}">
+    <div aria-hidden="true" style="position: absolute; left: 20px; right: 20px; top: 84px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 0; pointer-events: none; opacity: {{ghostOpacity}}; transition: opacity 280ms ease 220ms">
+      <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: {{cuSize}}px; line-height: 0.78; padding-top: 2px; letter-spacing: -0.02em; color: #F0B48C; white-space: nowrap; transition: font-size 400ms cubic-bezier(0.2, 0.8, 0.2, 1)">{{needed}}<span style="margin-left: 6px; font-size: 18px; letter-spacing: 0">cu ft</span></span>
+      <span style="flex: none; min-height: 48px; box-sizing: border-box; padding: 0 12px 0 16px; border-radius: 14px; background: rgba(255, 255, 255, 0.14); color: #FFFFFF; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 4px">View details<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></span>
+    </div>
+  </sc-if>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; top: {{sheetTop}}px; box-sizing: border-box; padding: 10px 20px 36px; background: {{sheetBg}}; color: #14202B; border-radius: 28px 28px 0 0; box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; transition: top 520ms cubic-bezier(0.2, 0.8, 0.2, 1), background-color 520ms ease">
+    <div aria-hidden="true" style="flex: none; align-self: center; width: 48px; height: 5px; border-radius: 3px; background: #C9D2DB"></div>
+    <div style="flex: 1; min-height: 0; overflow-y: auto; margin: 18px -20px 0; padding: 0 20px 8px; display: flex; flex-direction: column; gap: 14px; opacity: {{upOpacity}}; transition: opacity 180ms ease">
+    <span style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: #14202B; padding: 0 4px">How do you want to start?</span>
+    <button type="button" onClick="{{startBoxes}}" aria-pressed="{{boxesSelStr}}" style="min-height: 112px; padding: 18px 16px; border: {{boxesCard.border}}; border-radius: 22px; background: {{boxesCard.bg}}; color: #14202B; display: flex; align-items: center; gap: 14px; text-align: left">
+      <span style="flex: none; width: 52px; height: 52px; border-radius: 14px; background: #E9EDF1; display: flex; align-items: center; justify-content: center"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"></path><path d="M3 8l9 5 9-5"></path><path d="M12 13v8"></path></svg></span>
+      <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-family: 'Space Grotesk', sans-serif; font-size: 21px; font-weight: 700; line-height: 1.1; white-space: nowrap">Count my boxes</span>
+        <span style="font-size: 15px; line-height: 1.3; color: {{boxesCard.subColor}}; font-weight: {{boxesCard.subWeight}}">{{boxesCard.sub}}</span>
+      </span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M9 6l6 6-6 6"></path></svg>
+    </button>
+    <button type="button" onClick="{{startPreset}}" aria-pressed="{{presetSelStr}}" style="min-height: 112px; padding: 18px 16px; border: {{presetCard.border}}; border-radius: 22px; background: {{presetCard.bg}}; color: #14202B; display: flex; align-items: center; gap: 14px; text-align: left">
+      <span style="flex: none; width: 52px; height: 52px; border-radius: 14px; background: #E9EDF1; display: flex; align-items: center; justify-content: center"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 9.5V20h14V9.5"></path><path d="M10 20v-6h4v6"></path></svg></span>
+      <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-family: 'Space Grotesk', sans-serif; font-size: 21px; font-weight: 700; line-height: 1.1; white-space: nowrap">Start with a preset</span>
+        <span style="font-size: 15px; line-height: 1.3; color: {{presetCard.subColor}}; font-weight: {{presetCard.subWeight}}">{{presetCard.sub}}</span>
+      </span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M9 6l6 6-6 6"></path></svg>
+    </button>
+    <sc-if value="{{hasSaved}}" hint-placeholder-val="{{ false }}">
+      <span style="margin-top: 6px; padding: 0 4px; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #4A5866">Saved moves</span>
+      <sc-for list="{{savedRows}}" as="sv" hint-placeholder-count="2">
+        <div style="flex: none; display: flex; align-items: stretch; gap: 8px">
+          <button type="button" onClick="{{sv.open}}" style="flex: 1; min-width: 0; min-height: 68px; padding: 10px 14px; border: 2px solid #DCE2E8; border-radius: 16px; background: #F4F6F8; color: #14202B; text-align: left; display: flex; flex-direction: column; justify-content: center; gap: 2px">
+            <span style="font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{sv.name}}</span>
+            <span style="font-size: 14px; color: #4A5866; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{sv.summary}}</span>
+          </button>
+          <button type="button" onClick="{{sv.remove}}" aria-label="Delete {{sv.label}}" style="flex: none; width: 60px; border: 2px solid #DCE2E8; border-radius: 16px; background: #FFFFFF; color: #8A3F15; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M6 7l1 13h10l1-13"></path></svg></button>
+        </div>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{started}}" hint-placeholder-val="{{ false }}">
+      <button type="button" onClick="{{clearAll}}" style="min-height: 56px; border: 2px solid #C9D2DB; border-radius: 16px; background: #FFFFFF; color: #14202B; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M6 7l1 13h10l1-13"></path></svg>Clear selections</button>
+    </sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isPresetPick}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; height: {{appH}}px; background: #14202B">
+  <div style="flex: none; padding: 20px 20px 26px; background: #14202B; color: #FFFFFF; display: flex; flex-wrap: wrap; align-items: center; gap: 0 10px">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"></path><path d="M3 8l9 5 9-5"></path><path d="M12 13v8"></path></svg>
+    <span style="flex: none; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.01em">Stackwise</span>
+    <button type="button" onClick="{{goStart}}" style="order: -1; margin-right: auto; flex: none; min-height: 52px; padding: 0 4px; border: none; background: transparent; color: #FFFFFF; font-size: 17px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>{{ppBackLabel}}</button>
+    <div aria-hidden="true" style="flex: 1 1 100%; box-sizing: border-box; height: {{ppTotalsH}}px; padding-top: 22px; opacity: {{ppTotalsOpacity}}; overflow: hidden; pointer-events: none; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; transition: height 460ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 320ms ease 120ms">
+      <span style="padding-top: 2px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 42px; line-height: 0.78; letter-spacing: -0.02em; color: #F0B48C; white-space: nowrap">{{ppNeeded}}<span style="margin-left: 6px; font-size: 18px; letter-spacing: 0">cu ft</span></span>
+      <span style="flex: none; min-height: 48px; box-sizing: border-box; padding: 0 12px 0 16px; border-radius: 14px; background: rgba(255, 255, 255, 0.14); color: #FFFFFF; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 6px">View details<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(90deg)"><path d="M9 6l6 6-6 6"></path></svg></span>
+    </div>
+  </div>
+  <div style="flex: 1; min-height: 0; margin-top: -16px; display: flex; flex-direction: column; background: #F4F6F8; border-radius: 28px 28px 0 0; box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.35); overflow: hidden; position: relative">
+  <div aria-hidden="true" style="flex: none; align-self: center; width: 48px; height: 5px; border-radius: 3px; background: #C9D2DB; margin-top: 10px"></div>
+  <div style="flex: none; padding: 18px 20px 16px; display: flex; flex-direction: column; gap: 4px; opacity: {{ppListOpacity}}; transform: translateY({{ppListShift}}px); transition: opacity 240ms ease, transform 380ms cubic-bezier(0.2, 0.8, 0.2, 1)">
+    <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1">Pick a home size</h2>
+    <p style="margin: 0; font-size: 17px; color: #4A5866">We’ll fill in typical box counts. You can adjust them next.</p>
+  </div>
+  <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 0 20px 28px; display: flex; flex-direction: column; gap: 12px; opacity: {{ppListOpacity}}; transform: translateY({{ppListShift}}px); transition: opacity 240ms ease 40ms, transform 380ms cubic-bezier(0.2, 0.8, 0.2, 1) 40ms">
+    <sc-for list="{{presets}}" as="p" hint-placeholder-count="6">
+      <button type="button" onClick="{{p.start}}" style="flex: none; min-height: 96px; padding: 12px 16px; border: 2px solid #DCE2E8; border-radius: 20px; background: #FFFFFF; color: #14202B; display: flex; align-items: center; gap: 16px; text-align: left">
+        <span style="flex: none; width: 72px; height: 64px; border-radius: 14px; background: #F4F6F8; display: flex; align-items: center; justify-content: center"><svg width="56" height="42" viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{p.icon}}"></path></svg></span>
+        <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+          <span style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; line-height: 1.1">{{p.label}}</span>
+          <span style="font-size: 16px; color: #4A5866">{{p.sub}}</span>
+        </span>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M9 6l6 6-6 6"></path></svg>
+      </button>
+    </sc-for>
+  </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isCount}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; height: {{appH}}px; background: #14202B">
+  <div style="flex: none; padding: 20px 20px 26px; background: #14202B; color: #FFFFFF; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"></path><path d="M3 8l9 5 9-5"></path><path d="M12 13v8"></path></svg>
+      <h1 style="flex: none; margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.01em">Stackwise</h1>
+      <button type="button" onClick="{{goStart}}" style="order: -1; margin-right: auto; flex: none; min-height: 52px; padding: 0 4px; border: none; background: transparent; color: #FFFFFF; font-size: 17px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Start over</button>
+    </div>
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 0">
+      <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: {{cuSize}}px; line-height: 0.78; padding-top: 2px; letter-spacing: -0.02em; color: #F0B48C; white-space: nowrap; transition: font-size 400ms cubic-bezier(0.2, 0.8, 0.2, 1)">{{needed}}<span style="margin-left: 6px; font-size: 18px; letter-spacing: 0">cu ft</span></span>
+      <button type="button" onClick="{{toggleDetails}}" aria-expanded="{{detailsExpanded}}" style="flex: none; min-height: 48px; padding: 0 12px 0 16px; border: none; border-radius: 14px; background: rgba(255, 255, 255, 0.14); color: #FFFFFF; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 6px">{{detailsLabel}}<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: {{detailsChevron}}; transition: transform 300ms ease"><path d="M9 6l6 6-6 6"></path></svg></button>
+    </div>
+    <div style="flex: none; width: 100%; height: {{detailsMax}}px; opacity: {{detailsOpacity}}; overflow: hidden; transition: height 480ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 320ms ease">
+      <div style="height: 100%; box-sizing: border-box; padding-bottom: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-top: 4px">
+        <span style="font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #B9C4CE">Recommendation</span>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+          <div style="min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 16px; background: rgba(255, 255, 255, 0.06)">
+            <span style="width: 44px; height: 44px; border-radius: 12px; background: rgba(240, 180, 140, 0.16); color: #F0B48C; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 5h13v11H1z"></path><path d="M14 9h4l3 3v4h-7z"></path><circle cx="5.5" cy="18.5" r="2"></circle><circle cx="17.5" cy="18.5" r="2"></circle></svg></span>
+            <span style="margin-top: 4px; font-size: 14px; color: #B9C4CE">Moving truck</span>
+            <span style="font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; line-height: 1.02; letter-spacing: -0.02em; color: #FFFFFF">{{recTruck.name}}</span>
+            <span style="font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; line-height: 1; letter-spacing: 0; white-space: nowrap; color: #F0B48C">{{recTruck.big}}</span>
+            <div role="img" aria-label="{{recTruck.barLabel}}" style="height: 12px; margin: 2px 0 4px; border-radius: 6px; background: rgba(255, 255, 255, 0.12); overflow: hidden"><div style="height: 12px; width: {{recTruck.pct}}%; border-radius: 6px; background: {{recTruck.barColor}}; transition: width 400ms ease"></div></div>
+            <span style="font-size: 13px; line-height: 1.3; color: #D6DDE3">{{recTruck.note}}</span>
+          </div>
+          <div style="min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 16px; background: rgba(255, 255, 255, 0.06)">
+            <span style="width: 44px; height: 44px; border-radius: 12px; background: rgba(240, 180, 140, 0.16); color: #F0B48C; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V9l9-5 9 5v12"></path><path d="M7 21v-8h10v8"></path><path d="M7 17h10"></path></svg></span>
+            <span style="margin-top: 4px; font-size: 14px; color: #B9C4CE">Storage unit</span>
+            <span style="font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; line-height: 1.02; letter-spacing: -0.02em; color: #FFFFFF">{{recStorage.name}}</span>
+            <span style="font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; line-height: 1; letter-spacing: 0; white-space: nowrap; color: #F0B48C">{{recStorage.big}}</span>
+            <div role="img" aria-label="{{recStorage.barLabel}}" style="height: 12px; margin: 2px 0 4px; border-radius: 6px; background: rgba(255, 255, 255, 0.12); overflow: hidden"><div style="height: 12px; width: {{recStorage.pct}}%; border-radius: 6px; background: {{recStorage.barColor}}; transition: width 400ms ease"></div></div>
+            <span style="font-size: 13px; line-height: 1.3; color: #D6DDE3">{{recStorage.note}}</span>
+          </div>
+        </div>
+        <span style="margin-top: 6px; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #B9C4CE">Your selections · {{totalItems}} items</span>
+        <div style="display: flex; flex-direction: column; padding: 2px 14px; border-radius: 16px; background: rgba(255, 255, 255, 0.06)">
+          <sc-if value="{{hasDetailRows}}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{detailRows}}" as="dr" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 68px; border-bottom: 1px solid {{dr.divider}}">
+                <span style="flex: none; min-width: 18px; text-align: center; font-size: 13px; font-weight: 700; line-height: 1; padding: 4px 7px; border-radius: 9px; background: #F0B48C; color: #14202B">{{dr.abbr}}</span>
+                <span style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+                  <span style="font-size: 16px; font-weight: 700; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{dr.label}}</span>
+                  <span style="font-size: 13px; color: #B9C4CE">{{dr.sub}}</span>
+                </span>
+                <span style="flex: none; display: flex; align-items: baseline; gap: 4px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #FFFFFF"><span style="font-size: 18px; color: #B9C4CE">×</span><span style="font-size: 36px; line-height: 1">{{dr.count}}</span></span>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{noDetailRows}}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 14px 0; font-size: 15px; color: #D6DDE3">No boxes added yet.</p>
+          </sc-if>
+        </div>
+        <span style="font-size: 13px; color: #B9C4CE">Totals include {{buffer}}% extra space for packing.</span>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px">
+          <label for="move-name-a" style="font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #B9C4CE">Save this move</label>
+          <div style="display: flex; align-items: stretch; height: 64px; border: 2px solid #3A4A57; border-radius: 32px; background: rgba(255, 255, 255, 0.06); overflow: hidden">
+            <input id="move-name-a" type="text" autocomplete="off" value="{{draftName}}" onChange="{{setDraftName}}" placeholder="{{defaultMoveName}}" aria-label="Move name" style="flex: 1; min-width: 0; box-sizing: border-box; padding: 0 8px 0 20px; border: none; background: transparent; color: #FFFFFF; font-size: 17px; font-weight: 600; outline-offset: -3px">
+            <button type="button" onClick="{{saveMove}}" style="flex: none; margin: 4px; padding: 0 20px; border: none; border-radius: 28px; background: {{saveBg}}; color: #FFFFFF; font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 8px; transition: background-color 250ms ease"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h10l4 4v14H4V3z"></path><path d="M8 3v6h8V3"></path><path d="M8 21v-7h8v7"></path></svg>{{saveLabel}}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="flex: 1; min-height: 0; margin-top: -16px; display: flex; flex-direction: column; background: #F4F6F8; border-radius: 28px 28px 0 0; box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.35); overflow: hidden; position: relative">
+  <div aria-hidden="true" style="flex: none; align-self: center; width: 48px; height: 5px; border-radius: 3px; background: #C9D2DB; margin-top: 10px"></div>
+  <div role="tablist" aria-label="Boxes view" style="flex: none; margin: 14px 20px 0; padding: 4px; background: #E1E6EB; border-radius: 16px; display: flex; gap: 4px">
+    <button type="button" role="tab" aria-selected="{{tabBoxesSel}}" onClick="{{showBoxes}}" style="flex: 1; min-height: 56px; border: none; border-radius: 12px; background: {{tabBoxesBg}}; color: #14202B; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>List</button>
+    <button type="button" role="tab" aria-selected="{{tabViewSel}}" onClick="{{showView}}" style="flex: 1; min-height: 56px; border: none; border-radius: 12px; background: {{tabViewBg}}; color: #14202B; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5-9 5-9-5z"></path><path d="M3 12l9 5 9-5"></path><path d="M3 17l9 5 9-5"></path></svg>3D view</button>
+  </div>
+
+  <sc-if value="{{tabView}}" hint-placeholder-val="{{ false }}">
+  <div style="flex: none; height: 14px"></div>
+  <div style="flex: none; margin: 0 20px; background: #FFFFFF; border-radius: 20px; border: 1px solid #DCE2E8; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 6px 16px rgba(20, 32, 43, 0.06)">
+      <sc-if value="{{catFit}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 0 4px">
+        <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px">{{best.name}}</span>
+        <span style="font-size: 13px; font-weight: 600; color: {{fitColor}}">{{fitTag}}</span>
+      </div>
+      <svg width="326" height="200" viewBox="0 0 340 210" role="img" aria-label="Isometric view of the {{best.name}} holding your load" style="display: block; margin: 0 auto">
+        <polygon points="{{iso.floor}}" fill="#E9EDF1" stroke="#AEBAC5" stroke-width="1" stroke-linejoin="round"></polygon>
+        <polygon points="{{iso.back}}" fill="#DCE2E8" stroke="#AEBAC5" stroke-width="1" stroke-linejoin="round"></polygon>
+        <polygon points="{{iso.side}}" fill="#D2D9E0" stroke="#AEBAC5" stroke-width="1" stroke-linejoin="round"></polygon>
+        <polygon points="{{iso.fillLeft}}" fill="#C98F55"></polygon>
+        <polygon points="{{iso.fillRight}}" fill="#A66F3B"></polygon>
+        <polygon points="{{iso.fillTop}}" fill="#E6B983"></polygon>
+        <path d="{{iso.seams}}" fill="none" stroke="#6E4520" stroke-width="0.8" stroke-opacity="0.55"></path>
+        <path d="{{iso.front}}" fill="none" stroke="#7D8B97" stroke-width="1.2" stroke-dasharray="4 4" stroke-linecap="round"></path>
+      </svg>
+      <div style="height: 8px; margin: 2px 4px 0; border-radius: 4px; background: #E1E6EB; overflow: hidden">
+        <div style="height: 8px; width: {{best.pct}}%; background: {{accent}}; border-radius: 4px"></div>
+      </div>
+      <span style="font-size: 12px; color: #4A5866; text-align: center">{{best.summary}}</span>
+      <sc-if value="{{overflow}}" hint-placeholder-val="{{ false }}">
+        <span style="font-size: 12px; font-weight: 600; color: #9A4A1A; text-align: center">{{overflowNote}}</span>
+      </sc-if>
+      </sc-if>
+      <sc-if value="{{catRoom}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 0 4px">
+        <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px">Your stack</span>
+        <span style="font-size: 13px; color: #56626E">{{pile.count}} boxes</span>
+      </div>
+      <div role="img" aria-label="Isometric view of {{pile.count}} boxes stacked together" style="position: relative; width: 326px; height: 200px; margin: 0 auto">
+        <svg width="326" height="200" viewBox="0 0 326 200" aria-hidden="true" style="position: absolute; left: 0; top: 0">
+          <polygon points="{{pile.floor}}" fill="#E9EDF1" stroke="#D3DAE1" stroke-width="1" stroke-linejoin="round"></polygon>
+        </svg>
+        <sc-for list="{{pile.boxes}}" as="bx" hint-placeholder-count="6">
+          <svg width="326" height="200" viewBox="0 0 326 200" aria-hidden="true" style="position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none">
+            <polygon points="{{bx.left}}" fill="#C98F55" stroke="#6E4520" stroke-width="0.6" stroke-linejoin="round"></polygon>
+            <polygon points="{{bx.right}}" fill="#A66F3B" stroke="#6E4520" stroke-width="0.6" stroke-linejoin="round"></polygon>
+            <polygon points="{{bx.top}}" fill="#E6B983" stroke="#6E4520" stroke-width="0.6" stroke-linejoin="round"></polygon>
+            <polygon points="{{bx.tapeTop}}" fill="#F4E1BF"></polygon>
+            <polygon points="{{bx.tapeSide}}" fill="#F4E1BF"></polygon>
+            <path d="{{bx.letter}}" fill="none" stroke="#5A3714" stroke-width="{{bx.lw}}" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </sc-for>
+        <sc-if value="{{pile.empty}}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; left: 0; top: 0; width: 326px; height: 200px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #56626E">Add boxes in the Boxes tab to build your stack</div>
+        </sc-if>
+      </div>
+      <sc-if value="{{pile.hasLegend}}" hint-placeholder-val="{{ true }}">
+        <ul aria-label="Legend" style="list-style: none; margin: 2px 0 0; padding: 8px 2px 0; border-top: 1px solid #E1E6EB; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 8px">
+          <sc-for list="{{pile.legend}}" as="lg" hint-placeholder-count="6">
+            <li style="display: flex; align-items: center; gap: 5px; font-size: 12px; color: #14202B; min-width: 0">
+              <span style="flex: none; width: 22px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #E6B983; border: 1px solid #6E4520; color: #5A3714; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 11px">{{lg.abbr}}</span>
+              <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{lg.name}}</span>
+              <span style="flex: none; font-weight: 600; color: {{lg.countColor}}">{{lg.count}}</span>
+            </li>
+          </sc-for>
+        </ul>
+      </sc-if>
+      <span style="font-size: 11px; color: #56626E; text-align: center">{{pile.caption}}</span>
+      </sc-if>
+  </div>
+  <div style="flex: 1; min-height: 0"></div>
+  </sc-if>
+
+  <sc-if value="{{tabBoxes}}" hint-placeholder-val="{{ true }}">
+  <div class="sw-in" style="flex: 1; min-height: 0; overflow-y: auto; padding: 18px 20px 112px; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; flex-direction: column; gap: 2px; padding: 0 2px 4px">
+      <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15">How many boxes do you have?</h2>
+      <p style="margin: 0; font-size: 16px; color: #4A5866">Type a number or use − and +.</p>
+    </div>
+    <sc-for list="{{items}}" as="it" hint-placeholder-count="7">
+      <div style="display: flex; flex-direction: column; gap: 10px; background: #FFFFFF; border-radius: 20px; padding: 12px; border: 1px solid #DCE2E8">
+        <div style="display: flex; flex-direction: column; gap: 6px; padding: 0 2px">
+          <span style="font-weight: 700; font-size: 18px; line-height: 1.25">{{it.label}}</span>
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #4A5866; white-space: nowrap"><span style="flex: none; min-width: 18px; text-align: center; font-size: 13px; font-weight: 700; line-height: 1; padding: 4px 7px; border-radius: 9px; background: #14202B; color: #FFFFFF">{{it.abbr}}</span>{{it.dims}} · {{it.volStr}} cu ft</span>
+        </div>
+        <div style="display: flex; align-items: stretch; gap: 8px">
+          <button type="button" onClick="{{it.dec}}" aria-label="Remove one {{it.label}}" style="flex: 1; height: 64px; border-radius: 16px; border: 2px solid #C9D2DB; background: #F4F6F8; color: #14202B; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+          <input type="number" inputmode="numeric" min="0" max="999" placeholder="0" value="{{it.countStr}}" onChange="{{it.set}}" aria-label="Number of {{it.label}}" style="flex: 1.1; min-width: 0; height: 64px; box-sizing: border-box; padding: 0; text-align: center; border: 2px solid #8A96A1; border-radius: 16px; background: #FFFFFF; color: #14202B; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 28px">
+          <button type="button" onClick="{{it.inc}}" aria-label="Add one {{it.label}}" style="flex: 1; height: 64px; border-radius: 16px; border: none; background: #14202B; color: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+        </div>
+      </div>
+    </sc-for>
+    <section aria-labelledby="custom-heading" style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px; background: #FFFFFF; border-radius: 20px; padding: 16px 12px; border: 2px dashed #AEBAC5">
+      <div style="display: flex; flex-direction: column; gap: 2px; padding: 0 2px">
+        <h3 id="custom-heading" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700">Custom size</h3>
+        <p style="margin: 0; font-size: 15px; color: #4A5866">For odd-sized boxes or items. Measure in inches.</p>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <label for="custom-l" style="font-size: 15px; font-weight: 700; color: #14202B">Length</label>
+          <input id="custom-l" type="number" inputmode="decimal" min="0" step="0.5" placeholder="in" value="{{draftL}}" onChange="{{setDraftL}}" style="width: 100%; height: 60px; box-sizing: border-box; padding: 0 8px; text-align: center; border: 2px solid #8A96A1; border-radius: 14px; background: #FFFFFF; color: #14202B; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <label for="custom-w" style="font-size: 15px; font-weight: 700; color: #14202B">Width</label>
+          <input id="custom-w" type="number" inputmode="decimal" min="0" step="0.5" placeholder="in" value="{{draftW}}" onChange="{{setDraftW}}" style="width: 100%; height: 60px; box-sizing: border-box; padding: 0 8px; text-align: center; border: 2px solid #8A96A1; border-radius: 14px; background: #FFFFFF; color: #14202B; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <label for="custom-h" style="font-size: 15px; font-weight: 700; color: #14202B">Height</label>
+          <input id="custom-h" type="number" inputmode="decimal" min="0" step="0.5" placeholder="in" value="{{draftH}}" onChange="{{setDraftH}}" style="width: 100%; height: 60px; box-sizing: border-box; padding: 0 8px; text-align: center; border: 2px solid #8A96A1; border-radius: 14px; background: #FFFFFF; color: #14202B; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px">
+        </div>
+      </div>
+      <div style="display: flex; align-items: flex-end; gap: 8px">
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <label for="custom-qty" style="font-size: 15px; font-weight: 700; color: #14202B">How many</label>
+          <input id="custom-qty" type="number" inputmode="numeric" min="1" max="999" value="{{draftQty}}" onChange="{{setDraftQty}}" style="width: 100%; height: 64px; box-sizing: border-box; padding: 0 8px; text-align: center; border: 2px solid #8A96A1; border-radius: 16px; background: #FFFFFF; color: #14202B; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px">
+        </div>
+        <button type="button" onClick="{{addCustom}}" style="flex: 1.4; height: 64px; border: none; border-radius: 16px; background: {{addBg}}; color: #FFFFFF; font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add</button>
+      </div>
+      <span style="font-size: 15px; color: #4A5866; padding: 0 2px">{{draftEach}}</span>
+
+      <sc-if value="{{hasCustoms}}" hint-placeholder-val="{{ false }}">
+        <sc-for list="{{customRows}}" as="cr" hint-placeholder-count="1">
+          <div style="display: flex; flex-direction: column; gap: 10px; background: #F4F6F8; border-radius: 16px; padding: 12px; border: 1px solid #DCE2E8">
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span style="flex: none; min-width: 18px; text-align: center; font-size: 13px; font-weight: 700; line-height: 1; padding: 4px 7px; border-radius: 9px; background: #14202B; color: #FFFFFF">C</span>
+              <span style="flex: 1; min-width: 0; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{cr.dims}} · {{cr.volStr}} cu ft</span>
+              <button type="button" onClick="{{cr.remove}}" aria-label="Remove {{cr.label}}" style="flex: none; width: 52px; height: 52px; border-radius: 14px; border: 2px solid #C9D2DB; background: #FFFFFF; color: #9A4A1A; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M6 7l1 13h10l1-13"></path></svg></button>
+            </div>
+            <div style="display: flex; align-items: stretch; gap: 8px">
+              <button type="button" onClick="{{cr.dec}}" aria-label="Remove one {{cr.label}}" style="flex: 1; height: 64px; border-radius: 16px; border: 2px solid #C9D2DB; background: #FFFFFF; color: #14202B; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+              <input type="number" inputmode="numeric" min="1" max="999" value="{{cr.qtyStr}}" onChange="{{cr.set}}" aria-label="Number of {{cr.label}}" style="flex: 1.1; min-width: 0; height: 64px; box-sizing: border-box; padding: 0; text-align: center; border: 2px solid #8A96A1; border-radius: 16px; background: #FFFFFF; color: #14202B; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 28px">
+              <button type="button" onClick="{{cr.inc}}" aria-label="Add one {{cr.label}}" style="flex: 1; height: 64px; border-radius: 16px; border: none; background: #14202B; color: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+            </div>
+          </div>
+        </sc-for>
+      </sc-if>
+    </section>
+    <button type="button" onClick="{{reset}}" style="align-self: stretch; min-height: 60px; padding: 0 16px; background: #FFFFFF; border: 2px solid #C9D2DB; border-radius: 16px; color: #14202B; font-size: 17px; font-weight: 600">Clear all counts</button>
+  </div>
+  </sc-if>
+
+  <button type="button" onClick="{{showMatch}}" style="position: absolute; left: 20px; right: 20px; bottom: 28px; z-index: 5; opacity: {{fabOpacity}}; pointer-events: {{fabPE}}; transition: opacity 200ms ease; min-height: 68px; padding: 0 24px; border: none; border-radius: 34px; background: {{accent}}; color: #FFFFFF; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 24px rgba(20, 32, 43, 0.35), 0 2px 6px rgba(20, 32, 43, 0.2)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 5h13v11H1z"></path><path d="M14 9h4l3 3v4h-7z"></path><circle cx="5.5" cy="18.5" r="2"></circle><circle cx="17.5" cy="18.5" r="2"></circle></svg>Find my match</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isMatch}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; height: {{appH}}px; background: #14202B">
+  <div style="flex: none; padding: 20px 20px 26px; background: #14202B; color: #FFFFFF; display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"></path><path d="M3 8l9 5 9-5"></path><path d="M12 13v8"></path></svg>
+    <span style="flex: none; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.01em">Stackwise</span>
+    <button type="button" onClick="{{goStart}}" style="order: -1; margin-right: auto; flex: none; min-height: 52px; padding: 0 4px; border: none; background: transparent; color: #FFFFFF; font-size: 17px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Start over</button>
+    <div style="flex: 1 1 100%; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-top: 2px; padding: 10px 0">
+      <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: {{cuSize}}px; line-height: 0.78; padding-top: 2px; letter-spacing: -0.02em; color: #F0B48C; white-space: nowrap; transition: font-size 400ms cubic-bezier(0.2, 0.8, 0.2, 1)">{{needed}}<span style="margin-left: 6px; font-size: 18px; letter-spacing: 0">cu ft</span></span>
+      <button type="button" onClick="{{toggleDetails}}" aria-expanded="{{detailsExpanded}}" style="flex: none; min-height: 48px; padding: 0 12px 0 16px; border: none; border-radius: 14px; background: rgba(255, 255, 255, 0.14); color: #FFFFFF; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 6px">{{detailsLabel}}<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: {{detailsChevron}}; transition: transform 300ms ease"><path d="M9 6l6 6-6 6"></path></svg></button>
+    </div>
+    <div style="flex: none; width: 100%; height: {{detailsMax}}px; opacity: {{detailsOpacity}}; overflow: hidden; transition: height 480ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 320ms ease">
+      <div style="height: 100%; box-sizing: border-box; padding-bottom: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-top: 4px">
+        <span style="font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #B9C4CE">Recommendation</span>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+          <div style="min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 16px; background: rgba(255, 255, 255, 0.06)">
+            <span style="width: 44px; height: 44px; border-radius: 12px; background: rgba(240, 180, 140, 0.16); color: #F0B48C; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 5h13v11H1z"></path><path d="M14 9h4l3 3v4h-7z"></path><circle cx="5.5" cy="18.5" r="2"></circle><circle cx="17.5" cy="18.5" r="2"></circle></svg></span>
+            <span style="margin-top: 4px; font-size: 14px; color: #B9C4CE">Moving truck</span>
+            <span style="font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; line-height: 1.02; letter-spacing: -0.02em; color: #FFFFFF">{{recTruck.name}}</span>
+            <span style="font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; line-height: 1; letter-spacing: 0; white-space: nowrap; color: #F0B48C">{{recTruck.big}}</span>
+            <div role="img" aria-label="{{recTruck.barLabel}}" style="height: 12px; margin: 2px 0 4px; border-radius: 6px; background: rgba(255, 255, 255, 0.12); overflow: hidden"><div style="height: 12px; width: {{recTruck.pct}}%; border-radius: 6px; background: {{recTruck.barColor}}; transition: width 400ms ease"></div></div>
+            <span style="font-size: 13px; line-height: 1.3; color: #D6DDE3">{{recTruck.note}}</span>
+          </div>
+          <div style="min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 16px; background: rgba(255, 255, 255, 0.06)">
+            <span style="width: 44px; height: 44px; border-radius: 12px; background: rgba(240, 180, 140, 0.16); color: #F0B48C; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V9l9-5 9 5v12"></path><path d="M7 21v-8h10v8"></path><path d="M7 17h10"></path></svg></span>
+            <span style="margin-top: 4px; font-size: 14px; color: #B9C4CE">Storage unit</span>
+            <span style="font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; line-height: 1.02; letter-spacing: -0.02em; color: #FFFFFF">{{recStorage.name}}</span>
+            <span style="font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; line-height: 1; letter-spacing: 0; white-space: nowrap; color: #F0B48C">{{recStorage.big}}</span>
+            <div role="img" aria-label="{{recStorage.barLabel}}" style="height: 12px; margin: 2px 0 4px; border-radius: 6px; background: rgba(255, 255, 255, 0.12); overflow: hidden"><div style="height: 12px; width: {{recStorage.pct}}%; border-radius: 6px; background: {{recStorage.barColor}}; transition: width 400ms ease"></div></div>
+            <span style="font-size: 13px; line-height: 1.3; color: #D6DDE3">{{recStorage.note}}</span>
+          </div>
+        </div>
+        <span style="margin-top: 6px; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #B9C4CE">Your selections · {{totalItems}} items</span>
+        <div style="display: flex; flex-direction: column; padding: 2px 14px; border-radius: 16px; background: rgba(255, 255, 255, 0.06)">
+          <sc-if value="{{hasDetailRows}}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{detailRows}}" as="dr" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 68px; border-bottom: 1px solid {{dr.divider}}">
+                <span style="flex: none; min-width: 18px; text-align: center; font-size: 13px; font-weight: 700; line-height: 1; padding: 4px 7px; border-radius: 9px; background: #F0B48C; color: #14202B">{{dr.abbr}}</span>
+                <span style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+                  <span style="font-size: 16px; font-weight: 700; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{dr.label}}</span>
+                  <span style="font-size: 13px; color: #B9C4CE">{{dr.sub}}</span>
+                </span>
+                <span style="flex: none; display: flex; align-items: baseline; gap: 4px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #FFFFFF"><span style="font-size: 18px; color: #B9C4CE">×</span><span style="font-size: 36px; line-height: 1">{{dr.count}}</span></span>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{noDetailRows}}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 14px 0; font-size: 15px; color: #D6DDE3">No boxes added yet.</p>
+          </sc-if>
+        </div>
+        <span style="font-size: 13px; color: #B9C4CE">Totals include {{buffer}}% extra space for packing.</span>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px">
+          <label for="move-name-b" style="font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #B9C4CE">Save this move</label>
+          <div style="display: flex; align-items: stretch; height: 64px; border: 2px solid #3A4A57; border-radius: 32px; background: rgba(255, 255, 255, 0.06); overflow: hidden">
+            <input id="move-name-b" type="text" autocomplete="off" value="{{draftName}}" onChange="{{setDraftName}}" placeholder="{{defaultMoveName}}" aria-label="Move name" style="flex: 1; min-width: 0; box-sizing: border-box; padding: 0 8px 0 20px; border: none; background: transparent; color: #FFFFFF; font-size: 17px; font-weight: 600; outline-offset: -3px">
+            <button type="button" onClick="{{saveMove}}" style="flex: none; margin: 4px; padding: 0 20px; border: none; border-radius: 28px; background: {{saveBg}}; color: #FFFFFF; font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 8px; transition: background-color 250ms ease"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h10l4 4v14H4V3z"></path><path d="M8 3v6h8V3"></path><path d="M8 21v-7h8v7"></path></svg>{{saveLabel}}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="flex: 1; min-height: 0; margin-top: -16px; display: flex; flex-direction: column; background: #F4F6F8; border-radius: 28px 28px 0 0; box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.35); overflow: hidden; position: relative">
+  <div aria-hidden="true" style="flex: none; align-self: center; width: 48px; height: 5px; border-radius: 3px; background: #C9D2DB; margin-top: 10px"></div>
+
+  <div role="tablist" aria-label="Match type" style="flex: none; margin: 14px 20px 0; padding: 4px; background: #E1E6EB; border-radius: 16px; display: flex; gap: 4px">
+    <button type="button" role="tab" aria-selected="{{truckSel}}" onClick="{{pickTruck}}" style="flex: 1; min-height: 56px; border: none; border-radius: 12px; background: {{truckBg}}; color: #14202B; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 5h13v11H1z"></path><path d="M14 9h4l3 3v4h-7z"></path><circle cx="5.5" cy="18.5" r="2"></circle><circle cx="17.5" cy="18.5" r="2"></circle></svg>Moving truck</button>
+    <button type="button" role="tab" aria-selected="{{storageSel}}" onClick="{{pickStorage}}" style="flex: 1; min-height: 56px; border: none; border-radius: 12px; background: {{storageBg}}; color: #14202B; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V9l9-5 9 5v12"></path><path d="M7 21v-8h10v8"></path><path d="M7 17h10"></path></svg>Storage unit</button>
+  </div>
+
+
+  <div style="flex: 1; overflow-y: auto; padding: 16px 20px 112px; display: flex; flex-direction: column; gap: 12px">
+    <div style="background: #14202B; color: #FFFFFF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+      <span style="font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #F0B48C">{{recLabel}}</span>
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+        <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 32px; line-height: 1">{{best.name}}</span>
+        <span style="flex: none; font-size: 14px; color: #B9C4CE; text-align: right">Rough estimate<br>{{best.cap}} cu ft</span>
+      </div>
+      <svg width="310" height="200" viewBox="0 0 340 210" role="img" aria-label="Isometric view of the {{best.name}} filled {{best.pct}} percent with boxes" style="display: block; margin: 4px auto 0; width: 100%; height: auto">
+        <polygon points="{{iso.floor}}" fill="#22303C" stroke="#4E5E6B" stroke-width="1" stroke-linejoin="round"></polygon>
+        <polygon points="{{iso.back}}" fill="#26353F" stroke="#4E5E6B" stroke-width="1" stroke-linejoin="round"></polygon>
+        <polygon points="{{iso.side}}" fill="#2B3A45" stroke="#4E5E6B" stroke-width="1" stroke-linejoin="round"></polygon>
+        <polygon points="{{iso.fillLeft}}" fill="#C98F55"></polygon>
+        <polygon points="{{iso.fillRight}}" fill="#A66F3B"></polygon>
+        <polygon points="{{iso.fillTop}}" fill="#E6B983"></polygon>
+        <path d="{{iso.seams}}" fill="none" stroke="#6E4520" stroke-width="0.8" stroke-opacity="0.55"></path>
+        <path d="{{iso.front}}" fill="none" stroke="#9AAAB6" stroke-width="1.2" stroke-dasharray="4 4" stroke-linecap="round"></path>
+      </svg>
+      <sc-if value="{{overflow}}" hint-placeholder-val="{{ false }}">
+        <span style="font-size: 14px; color: #F0B48C; font-weight: 600">{{overflowNote}}</span>
+      </sc-if>
+    </div>
+
+    <span style="margin-top: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #56626E">All sizes</span>
+    <sc-for list="{{options}}" as="o" hint-placeholder-count="5">
+      <div style="background: #FFFFFF; border-radius: 16px; padding: 14px 16px; border: 2px solid {{o.border}}; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-weight: 600; font-size: 16px">{{o.name}}</span>
+            <span style="font-size: 13px; color: #56626E">{{o.sub}} · rough estimate {{o.cap}} cu ft</span>
+          </div>
+          <span style="flex: none; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 10px; background: {{o.tagBg}}; color: {{o.tagFg}}">{{o.status}}</span>
+        </div>
+        <div style="height: 6px; border-radius: 3px; background: #E1E6EB; overflow: hidden">
+          <div style="height: 6px; width: {{o.pct}}%; background: {{o.barColor}}; border-radius: 3px"></div>
+        </div>
+      </div>
+    </sc-for>
+    <p style="margin: 4px 0 0; font-size: 12px; line-height: 1.5; color: #56626E">Capacities are typical estimates and vary by rental company and facility. Bulky or oddly shaped furniture may need more room.</p>
+  </div>
+  <button type="button" onClick="{{showBoxes}}" style="position: absolute; left: 20px; right: 20px; bottom: 28px; z-index: 5; opacity: {{fabOpacity}}; pointer-events: {{fabPE}}; transition: opacity 200ms ease; min-height: 68px; padding: 0 24px; border: none; border-radius: 34px; background: {{accent}}; color: #FFFFFF; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 24px rgba(20, 32, 43, 0.35), 0 2px 6px rgba(20, 32, 43, 0.2)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"></path><path d="M3 8l9 5 9-5"></path><path d="M12 13v8"></path></svg>Edit boxes</button>
+  </div>
+</div>
+</sc-if>
+
+
+</div>
+</template>
+<script src="https://cdn.jsdelivr.net/npm/preact@10.22.0/dist/preact.umd.js"></script>
+<script>
+var COMPONENT_SRC = "\nclass Component extends DCLogic {\n  constructor(props) {\n    super(props);\n    this.state = {\n      screen: 'count',\n      mode: 'truck',\n      preset: 'custom',\n      tab: 'start',\n      category: 'room',\n      truckPick: 'auto',\n      storagePick: 'auto',\n      counts: { small: 0, medium: 0, large: 0, xl: 0, wardrobe: 0, dish: 0, furniture: 0 },\n      customs: [],\n      nextCustomId: 1,\n      draft: { l: '', w: '', h: '', qty: '1' }\n    };\n    Object.assign(this.state, { saved: this.readStore('stackwise.saved', []) }, this.readStore('stackwise.current', {}));\n  }\n  readStore(key, fallback) {\n    try {\n      const raw = window.localStorage.getItem(key);\n      return raw ? JSON.parse(raw) : fallback;\n    } catch (e) {\n      return fallback;\n    }\n  }\n  writeStore(key, value) {\n    try { window.localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}\n  }\n  slideTo(next, target) {\n    if (this.state.sheetUp) return;\n    this.setState({ slideTarget: target }, () => {\n      requestAnimationFrame(() => this.setState({ sheetUp: true }));\n    });\n    clearTimeout(this._slideTimer);\n    this._slideTimer = setTimeout(() => this.setState({ ...next, sheetUp: false }), 600);\n  }\n  componentWillUnmount() {\n    clearTimeout(this._slideTimer);\n  }\n  renderVals() {\n    const APP_H = this.props.appH || 844;\n    const logoTop = APP_H - 628, titleTop = APP_H - 516, taglineTop = APP_H - 452;\n    const accent = this.props.accent ?? '#B4561F';\n    const buffer = this.props.buffer ?? 15;\n    const s = this.state;\n    const C = Math.cos(Math.PI / 6);\n    const projector = (ox, oy, sc) => (x, y, z) => [ox + (x - y) * C * sc, oy + (x + y) * 0.5 * sc - z * sc];\n    const fmt = (p) => p[0].toFixed(1) + ',' + p[1].toFixed(1);\n    const poly = (P, arr) => arr.map((a) => fmt(P(a[0], a[1], a[2]))).join(' ');\n    const seg = (P, a, b) => 'M' + fmt(P(a[0], a[1], a[2])) + 'L' + fmt(P(b[0], b[1], b[2]));\n\n    // Stencil letters drawn as strokes on a box's left (+y) face. Glyphs: 0.6 wide \u00d7 1 tall, y down.\n    const GLYPHS = {\n      S: [[[0.6, 0.12], [0.45, 0], [0.15, 0], [0, 0.12], [0, 0.38], [0.15, 0.5], [0.45, 0.5], [0.6, 0.62], [0.6, 0.88], [0.45, 1], [0.15, 1], [0, 0.88]]],\n      M: [[[0, 1], [0, 0], [0.3, 0.55], [0.6, 0], [0.6, 1]]],\n      L: [[[0, 0], [0, 1], [0.6, 1]]],\n      X: [[[0, 0], [0.6, 1]], [[0.6, 0], [0, 1]]],\n      W: [[[0, 0], [0.15, 1], [0.3, 0.45], [0.45, 1], [0.6, 0]]],\n      D: [[[0, 0], [0.3, 0], [0.5, 0.12], [0.6, 0.35], [0.6, 0.65], [0.5, 0.88], [0.3, 1], [0, 1], [0, 0]]],\n      F: [[[0.6, 0], [0, 0], [0, 1]], [[0, 0.5], [0.45, 0.5]]],\n      C: [[[0.6, 0.12], [0.45, 0], [0.15, 0], [0, 0.15], [0, 0.85], [0.15, 1], [0.45, 1], [0.6, 0.88]]]\n    };\n    const stencil = (P, abbr, cx, yFace, cz, hgt) => {\n      const chars = abbr.split('');\n      const width = chars.length * 0.6 + (chars.length - 1) * 0.28;\n      let d = '';\n      chars.forEach((ch, ci) => {\n        const ox = ci * 0.88 - width / 2;\n        (GLYPHS[ch] || []).forEach((stroke) => {\n          stroke.forEach((pt, k) => {\n            const q = P(cx + (ox + pt[0]) * hgt, yFace, cz - (pt[1] - 0.5) * hgt);\n            d += (k === 0 ? 'M' : 'L') + fmt(q);\n          });\n        });\n      });\n      return d || 'M0,0';\n    };\n    const letterHeight = (abbr, l, h) => Math.min(h * 0.6, l * (abbr.length > 1 ? 0.38 : 0.62));\n\n    const boxIso = (L, W, H, furniture, abbr) => {\n      const sc = 0.75;\n      const P = projector(32 - (L - W) * C * sc / 2, 57 - (L + W) * 0.5 * sc, sc);\n      const t = Math.min(2.2, W * 0.12);\n      const m = W / 2;\n      const lh = letterHeight(abbr, L, H);\n      return {\n        letter: stencil(P, abbr, L / 2, W, H / 2, lh),\n        lw: Math.max(1, lh * sc * 0.16).toFixed(2),\n        cText: furniture ? '#2E3A45' : '#5A3714',\n        top: poly(P, [[0, 0, H], [L, 0, H], [L, W, H], [0, W, H]]),\n        left: poly(P, [[0, W, 0], [L, W, 0], [L, W, H], [0, W, H]]),\n        right: poly(P, [[L, 0, 0], [L, W, 0], [L, W, H], [L, 0, H]]),\n        tapeTop: poly(P, [[0, m - t, H], [L, m - t, H], [L, m + t, H], [0, m + t, H]]),\n        tapeSide: poly(P, [[L, m - t, H], [L, m + t, H], [L, m + t, H * 0.72], [L, m - t, H * 0.72]]),\n        shadow: ((L + W) * C * sc / 2 + 2).toFixed(1),\n        cTop: furniture ? '#C3CDD6' : '#E6B983',\n        cLeft: furniture ? '#97A4B0' : '#C98F55',\n        cRight: furniture ? '#75838F' : '#A66F3B',\n        cTape: furniture ? 'none' : '#F4E1BF',\n        edge: furniture ? '#4A5866' : '#6E4520'\n      };\n    };\n\n    const TYPES = [\n      { key: 'small', abbr: 'S', label: 'Small box', dims: '16 \u00d7 12 \u00d7 12 in', l: 16, w: 12, h: 12 },\n      { key: 'medium', abbr: 'M', label: 'Medium box', dims: '18 \u00d7 18 \u00d7 16 in', l: 18, w: 18, h: 16 },\n      { key: 'large', abbr: 'L', label: 'Large box', dims: '18 \u00d7 18 \u00d7 24 in', l: 18, w: 18, h: 24 },\n      { key: 'xl', abbr: 'XL', label: 'Extra-large box', dims: '24 \u00d7 18 \u00d7 24 in', l: 24, w: 18, h: 24 },\n      { key: 'wardrobe', abbr: 'W', label: 'Wardrobe box', dims: '24 \u00d7 21 \u00d7 46 in', l: 24, w: 21, h: 46 },\n      { key: 'dish', abbr: 'D', label: 'Dish pack', dims: '18 \u00d7 18 \u00d7 28 in', l: 18, w: 18, h: 28 },\n      { key: 'furniture', abbr: 'F', label: 'Furniture pieces', dims: 'rough average', l: 48, w: 30, h: 30, furniture: true }\n    ];\n    TYPES.forEach((t) => { t.vol = t.l * t.w * t.h / 1728; });\n    const PRESET_ICONS = {\n      studio: 'M6 34h36 M17 34V14h14v20 M20 18h3v3h-3z M25 18h3v3h-3z M22 34v-6h4v6',\n      '1br': 'M6 34h36 M17 34V6h14v28 M20 10h3v3h-3z M25 10h3v3h-3z M20 16h3v3h-3z M25 16h3v3h-3z M20 22h3v3h-3z M25 22h3v3h-3z M22 34v-5h4v5',\n      '2br': 'M4 34h40 M9 34V4h14v30 M23 34V12h15v22 M12 8h3v3h-3z M17 8h3v3h-3z M12 14h3v3h-3z M17 14h3v3h-3z M12 20h3v3h-3z M17 20h3v3h-3z M27 16h3v3h-3z M32 16h3v3h-3z M27 22h3v3h-3z M32 22h3v3h-3z M14 34v-5h4v5',\n      '2bh': 'M6 34h36 M13 34V20 M35 34V20 M9 23l15-12 15 12 M21 34v-7h6v7 M16 24h3v3h-3z M29 24h3v3h-3z',\n      '3br': 'M2 34h44 M8 34V19 M40 34V19 M4 22l20-15 20 15 M32 13V6h4v10 M21 34v-8h6v8 M12 23h4v4h-4z M32 23h4v4h-4z',\n      '4br': 'M2 34h44 M5 34V16 M29 34V16 M2 18l15-12 15 12 M29 22h15v12 M29 22l7-5 8 5 M14 34v-7h6v7 M9 20h4v4h-4z M21 20h4v4h-4z M32 27h9v7'\n    };\n    const PRESETS = {\n      studio: { label: 'Studio apt', counts: { small: 8, medium: 10, large: 4, xl: 0, wardrobe: 1, dish: 1, furniture: 3 } },\n      '1br': { label: '1 bed apt', counts: { small: 12, medium: 18, large: 8, xl: 2, wardrobe: 2, dish: 2, furniture: 6 } },\n      '2br': { label: '2 bed apt', counts: { small: 18, medium: 28, large: 14, xl: 4, wardrobe: 3, dish: 3, furniture: 10 } },\n      '2bh': { label: '2 bed house', counts: { small: 20, medium: 32, large: 16, xl: 5, wardrobe: 3, dish: 3, furniture: 12 } },\n      '3br': { label: '3 bed house', counts: { small: 25, medium: 40, large: 20, xl: 6, wardrobe: 4, dish: 4, furniture: 15 } },\n      '4br': { label: '4+ bed house', counts: { small: 32, medium: 52, large: 26, xl: 8, wardrobe: 5, dish: 5, furniture: 20 } }\n    };\n    const TRUCKS = [\n      { name: 'Cargo van', cap: 250, sub: 'Dorm or small studio', l: 10, w: 5.5, h: 4.5 },\n      { name: '10 ft truck', cap: 400, sub: 'Studio to 1 bedroom', l: 10, w: 6.3, h: 6.3 },\n      { name: '15 ft truck', cap: 760, sub: '1 to 2 bedrooms', l: 15, w: 7.5, h: 6.8 },\n      { name: '20 ft truck', cap: 1000, sub: '2 to 3 bedrooms', l: 20, w: 7.5, h: 6.7 },\n      { name: '26 ft truck', cap: 1700, sub: '3 to 5 bedrooms', l: 26, w: 8.2, h: 8 }\n    ];\n    const STORAGE = [\n      { name: '5 \u00d7 5 unit', cap: 200, sub: 'Closet size', l: 5, w: 5, h: 8 },\n      { name: '5 \u00d7 10 unit', cap: 400, sub: 'Walk-in closet', l: 10, w: 5, h: 8 },\n      { name: '10 \u00d7 10 unit', cap: 800, sub: 'Half a garage', l: 10, w: 10, h: 8 },\n      { name: '10 \u00d7 15 unit', cap: 1200, sub: 'Small bedroom', l: 15, w: 10, h: 8 },\n      { name: '10 \u00d7 20 unit', cap: 1600, sub: 'One-car garage', l: 20, w: 10, h: 8 },\n      { name: '10 \u00d7 30 unit', cap: 2400, sub: 'Large garage', l: 30, w: 10, h: 8 }\n    ];\n\n    const setCount = (key, delta) => {\n      const next = Math.max(0, (s.counts[key] || 0) + delta);\n      this.setState({ counts: { ...this.state.counts, [key]: next }, preset: 'custom' });\n    };\n    const items = TYPES.map((t) => ({\n      label: t.label,\n      abbr: t.abbr,\n      dims: t.dims,\n      volStr: t.vol.toFixed(1),\n      count: s.counts[t.key] || 0,\n      countStr: s.counts[t.key] ? String(s.counts[t.key]) : '',\n      set: (e) => {\n        const v = parseInt(e.target.value, 10);\n        const next = isNaN(v) ? 0 : Math.max(0, Math.min(999, v));\n        this.setState({ counts: { ...this.state.counts, [t.key]: next }, preset: 'custom' });\n      },\n      iso: boxIso(t.l, t.w, t.h, !!t.furniture, t.abbr),\n      inc: () => setCount(t.key, 1),\n      dec: () => setCount(t.key, -1)\n    }));\n    let raw = 0, totalItems = 0;\n    TYPES.forEach((t) => { const c = s.counts[t.key] || 0; raw += c * t.vol; totalItems += c; });\n    const CUSTOMS = (s.customs || []).map((cu) => ({ ...cu, key: 'c' + cu.id, abbr: 'C', label: 'Custom item', custom: true, vol: cu.l * cu.w * cu.h / 1728 }));\n    CUSTOMS.forEach((cu) => { raw += cu.qty * cu.vol; totalItems += cu.qty; });\n    const updateCustom = (id, fn) => this.setState({ customs: this.state.customs.map((cu) => (cu.id === id ? fn(cu) : cu)) });\n    const numOrBlank = (v) => { const n = parseFloat(v); return isNaN(n) || n <= 0 ? 0 : n; };\n    const dl = numOrBlank(s.draft.l), dw = numOrBlank(s.draft.w), dh = numOrBlank(s.draft.h);\n    const dq = Math.max(1, Math.min(999, parseInt(s.draft.qty, 10) || 1));\n    const canAdd = dl > 0 && dw > 0 && dh > 0;\n    const setDraft = (f) => (e) => this.setState({ draft: { ...this.state.draft, [f]: e.target.value } });\n    const customRows = CUSTOMS.map((cu) => ({\n      dims: cu.l + ' \u00d7 ' + cu.w + ' \u00d7 ' + cu.h + ' in',\n      volStr: cu.vol.toFixed(1),\n      qtyStr: String(cu.qty),\n      label: 'custom item ' + cu.l + ' by ' + cu.w + ' by ' + cu.h + ' inches',\n      dec: () => updateCustom(cu.id, (x) => ({ ...x, qty: Math.max(1, x.qty - 1) })),\n      inc: () => updateCustom(cu.id, (x) => ({ ...x, qty: Math.min(999, x.qty + 1) })),\n      set: (e) => { const v = parseInt(e.target.value, 10); updateCustom(cu.id, (x) => ({ ...x, qty: isNaN(v) ? 1 : Math.max(1, Math.min(999, v)) })); },\n      remove: () => this.setState({ customs: this.state.customs.filter((x) => x.id !== cu.id) })\n    }));\n    const needed = Math.ceil(raw * (1 + buffer / 100));\n\n    // Pile: one neat stack per box type, tallest types at the back, smallest at the front\n    const MAX_DRAWN = 300;\n    let budget = MAX_DRAWN, totalBoxes = 0;\n    const groupsIn = TYPES.filter((t) => !t.furniture).concat(CUSTOMS)\n      .sort((a, b) => b.h - a.h || b.vol - a.vol)\n      .map((t) => {\n        const c = t.custom ? t.qty : (s.counts[t.key] || 0);\n        totalBoxes += c;\n        const d = Math.min(c, budget);\n        budget -= d;\n        const layersMax = Math.max(1, Math.floor(66 / t.h));\n        return { t, c, d, n: Math.ceil(d / layersMax) };\n      })\n      .filter((gp) => gp.d > 0);\n    const N = groupsIn.reduce((m, gp) => m + gp.d, 0);\n    const D = Math.max(1, Math.min(4, groupsIn.reduce((m, gp) => Math.max(m, Math.ceil(Math.sqrt(gp.n))), 1)));\n    const GAP = 10;\n    let gx = 0, spanY = 0, maxH = 0;\n    const placed = [];\n    const labelsIn = [];\n    groupsIn.forEach((gp, gi) => {\n      const t = gp.t;\n      const rows = Math.min(gp.n, D);\n      const colsX = Math.ceil(gp.n / rows);\n      const cx = t.l + 2, cy = t.w + 2;\n      for (let b = 0; b < gp.d; b++) {\n        const k = b % gp.n;\n        const ci = Math.floor(k / rows), cj = k % rows;\n        const z = Math.floor(b / gp.n) * t.h;\n        placed.push({ t, gi, ci, cj, z, x: gx + ci * cx + 1, y: cj * cy + 1 });\n        maxH = Math.max(maxH, z + t.h);\n      }\n      const gw = colsX * cx, gd = rows * cy;\n      labelsIn.push({ x: gx + gw / 2, y: gd, text: t.abbr + ' ' + gp.c });\n      spanY = Math.max(spanY, gd);\n      gx += gw + GAP;\n    });\n    const spanX = Math.max(0, gx - GAP);\n    placed.sort((a, b) => a.gi - b.gi || (a.ci + a.cj) - (b.ci + b.cj) || a.z - b.z);\n    const base = (x, y, z) => [(x - y) * C, (x + y) * 0.5 - z];\n    const corners = [[0, 0, 0], [spanX, 0, 0], [0, spanY, 0], [spanX, spanY, 0], [0, 0, maxH], [spanX, 0, maxH], [0, spanY, maxH], [spanX, spanY, -14]];\n    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;\n    corners.forEach((c) => { const q = base(c[0], c[1], c[2]); minX = Math.min(minX, q[0]); maxX = Math.max(maxX, q[0]); minY = Math.min(minY, q[1]); maxY = Math.max(maxY, q[1]); });\n    const ps = Math.min(310 / (maxX - minX), 186 / (maxY - minY), 2.4);\n    const pox = (326 - (maxX - minX) * ps) / 2 - minX * ps;\n    const poy = 194 - maxY * ps;\n    const PP = (x, y, z) => { const q = base(x, y, z); return [pox + q[0] * ps, poy + q[1] * ps]; };\n    const pileBoxes = placed.map((p) => {\n      const x0 = p.x, y0 = p.y, z0 = p.z, x1 = p.x + p.t.l, y1 = p.y + p.t.w, z1 = p.z + p.t.h;\n      const m = (y0 + y1) / 2, tp = Math.min(2.2, p.t.w * 0.12);\n      return {\n        top: poly(PP, [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]]),\n        left: poly(PP, [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]]),\n        right: poly(PP, [[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1]]),\n        tapeTop: poly(PP, [[x0, m - tp, z1], [x1, m - tp, z1], [x1, m + tp, z1], [x0, m + tp, z1]]),\n        tapeSide: poly(PP, [[x1, m - tp, z1], [x1, m + tp, z1], [x1, m + tp, z1 - p.t.h * 0.28], [x1, m - tp, z1 - p.t.h * 0.28]]),\n        letter: stencil(PP, p.t.abbr, (x0 + x1) / 2, y1, (z0 + z1) / 2, letterHeight(p.t.abbr, p.t.l, p.t.h)),\n        lw: Math.max(0.8, letterHeight(p.t.abbr, p.t.l, p.t.h) * ps * 0.16).toFixed(2)\n      };\n    });\n    const furn = s.counts.furniture || 0;\n    const ftStr = (inches) => (Math.round(inches / 12 * 10) / 10).toString();\n    let pileCaption = N === 0 ? '' : 'About ' + ftStr(maxH) + ' ft tall on a ' + ftStr(spanX) + ' \u00d7 ' + ftStr(spanY) + ' ft footprint';\n    if (totalBoxes > MAX_DRAWN) pileCaption += ' \u00b7 showing first ' + MAX_DRAWN;\n    if (furn > 0) pileCaption += (pileCaption ? ' \u00b7 ' : '') + '+ ' + furn + ' furniture piece' + (furn === 1 ? '' : 's') + ' not shown';\n    const pileLabels = labelsIn.map((lb) => {\n      const q = PP(lb.x, lb.y + 3, 0);\n      return { text: lb.text, x: q[0].toFixed(1), y: (q[1] + 2).toFixed(1) };\n    });\n    const pile = {\n      count: totalBoxes,\n      empty: N === 0,\n      boxes: pileBoxes,\n      labels: pileLabels,\n      hasLegend: N > 0,\n      legend: TYPES.filter((t) => !t.furniture).map((t) => {\n        const c = s.counts[t.key] || 0;\n        return { abbr: t.abbr, name: t.key === 'xl' ? 'X-large' : t.label.replace(' box', '').replace(' pack', ''), count: c, countColor: c > 0 ? '#14202B' : '#56626E' };\n      }).concat(CUSTOMS.length ? [{ abbr: 'C', name: 'Custom', count: CUSTOMS.reduce((m, cu) => m + cu.qty, 0), countColor: '#14202B' }] : []),\n      floor: poly(PP, [[-4, -4, 0], [spanX + 4, -4, 0], [spanX + 4, spanY + 4, 0], [-4, spanY + 4, 0]]),\n      caption: pileCaption\n    };\n\n    const presets = Object.keys(PRESETS).map((k) => {\n      const on = s.preset === k;\n      const pc = PRESETS[k].counts;\n      const nBoxes = pc.small + pc.medium + pc.large + pc.xl + pc.wardrobe + pc.dish;\n      return {\n        label: PRESETS[k].label,\n        icon: PRESET_ICONS[k],\n        start: () => {\n          if (this.state.ppAnim) return;\n          const pn = Math.ceil(TYPES.reduce((m, t) => m + (pc[t.key] || 0) * t.vol, 0) * (1 + buffer / 100));\n          this.setState({ ppAnim: true, ppNeeded: pn.toLocaleString() });\n          clearTimeout(this._ppTimer);\n          this._ppTimer = setTimeout(() => this.setState({ preset: k, counts: { ...PRESETS[k].counts }, tab: 'boxes', customs: [], startedWith: 'preset', startedPresetLabel: PRESETS[k].label, currentSaveId: null, draftName: '', ppAnim: false }), 500);\n        },\n        sub: 'Rough estimate: ' + nBoxes + ' boxes',\n        subFg: on ? '#D6DDE3' : '#56626E',\n        pressed: on ? 'true' : 'false',\n        border: on ? '#14202B' : '#C9D2DB',\n        bg: on ? '#14202B' : '#FFFFFF',\n        fg: on ? '#FFFFFF' : '#14202B',\n        pick: () => this.setState({ preset: k, counts: { ...PRESETS[k].counts } })\n      };\n    });\n\n    const fitFor = (arr, unitWord) => {\n      if (totalItems === 0) return { name: 'Add boxes', big: '0%', pct: 0, barColor: '#F0B48C', barLabel: 'Empty', note: 'We\u2019ll suggest a size once you add boxes' };\n      const i = arr.findIndex((o) => needed <= o.cap);\n      if (i >= 0) {\n        const o = arr[i];\n        const pct = Math.round(needed / o.cap * 100);\n        return { name: o.name.replace(/ (truck|unit)$/, ''), big: pct + '%', pct, barColor: '#F0B48C', barLabel: pct + ' percent full', note: 'Rough estimate ' + o.cap.toLocaleString() + ' cu ft' };\n      }\n      const last = arr[arr.length - 1];\n      const runs = Math.ceil(needed / last.cap);\n      return { name: last.name.replace(/ (truck|unit)$/, ''), big: runs + ' ' + unitWord, pct: 100, barColor: '#E8A07A', barLabel: 'Over capacity, ' + runs + ' ' + unitWord + ' needed', note: 'Rough estimate ' + last.cap.toLocaleString() + ' cu ft each' };\n    };\n    const recTruck = fitFor(TRUCKS, 'trips');\n    const recStorage = fitFor(STORAGE, 'units');\n    const detailRowsRaw = TYPES.filter((t) => (s.counts[t.key] || 0) > 0).map((t) => {\n      const c = s.counts[t.key];\n      return { abbr: t.abbr, label: t.label, count: c, sub: t.dims + ' \u00b7 ' + (c * t.vol).toFixed(1) + ' cu ft' };\n    }).concat(CUSTOMS.map((cu) => ({ abbr: 'C', label: 'Custom ' + cu.l + ' \u00d7 ' + cu.w + ' \u00d7 ' + cu.h + ' in', count: cu.qty, sub: (cu.qty * cu.vol).toFixed(1) + ' cu ft' })));\n    const detailRows = detailRowsRaw.map((r, i) => ({ ...r, divider: i === detailRowsRaw.length - 1 ? 'transparent' : '#E1E6EB' }));\n\n    const started = totalItems > 0;\n    const boxesSel = started && s.startedWith !== 'preset';\n    const presetSel = started && s.startedWith === 'preset';\n    const progress = totalItems + ' items \u00b7 ' + needed.toLocaleString() + ' cu ft';\n    const cardFor = (sel, idle, active) => ({\n      border: sel ? '3px solid ' + accent : '2px solid #14202B',\n      bg: sel ? '#FBF1EA' : '#FFFFFF',\n      sub: sel ? active : idle,\n      subColor: sel ? '#8A3F15' : '#4A5866',\n      subWeight: sel ? 700 : 400\n    });\n    const boxesCard = cardFor(boxesSel, 'Enter how many of each box size', progress + ' \u00b7 tap to continue');\n    const presetCard = cardFor(presetSel, 'Pick a home size for a quick estimate', (s.startedPresetLabel || 'Preset') + ' \u00b7 ' + needed.toLocaleString() + ' cu ft');\n    // autosave the move in progress (this browser only)\n    this.writeStore('stackwise.current', {\n      counts: s.counts, customs: s.customs || [], preset: s.preset,\n      startedWith: s.startedWith || null, startedPresetLabel: s.startedPresetLabel || null,\n      currentSaveId: s.currentSaveId || null, draftName: s.draftName || ''\n    });\n    const savedList = s.saved || [];\n    const hasSaved = savedList.length > 0;\n    const defaultMoveName = s.startedWith === 'preset' && s.startedPresetLabel ? s.startedPresetLabel : 'My move';\n    const fmtDate = (t) => { try { return new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch (e) { return ''; } };\n    const savedRows = savedList.map((mv) => ({\n      name: mv.name,\n      summary: (mv.needed || 0).toLocaleString() + ' cu ft \u00b7 ' + (mv.totalItems || 0) + ' items \u00b7 ' + fmtDate(mv.savedAt),\n      label: mv.name,\n      open: () => this.slideTo({\n        tab: 'boxes', counts: { ...mv.counts }, customs: (mv.customs || []).map((c) => ({ ...c })),\n        preset: mv.preset || 'custom', startedWith: mv.startedWith || 'boxes', startedPresetLabel: mv.startedPresetLabel || null,\n        currentSaveId: mv.id, draftName: mv.name\n      }, 'boxes'),\n      remove: () => {\n        const next = (this.state.saved || []).filter((x) => x.id !== mv.id);\n        this.writeStore('stackwise.saved', next);\n        this.setState({ saved: next, currentSaveId: this.state.currentSaveId === mv.id ? null : this.state.currentSaveId });\n      }\n    }));\n    const isSavedCurrent = !!s.currentSaveId && savedList.some((x) => x.id === s.currentSaveId);\n    const list = s.mode === 'truck' ? TRUCKS : STORAGE;\n    let bestIdx = list.findIndex((o) => needed <= o.cap);\n    const noFit = bestIdx === -1;\n    if (noFit) bestIdx = list.length - 1;\n    const pickRaw = s.mode === 'truck' ? s.truckPick : s.storagePick;\n    const isAuto = pickRaw === 'auto';\n    const selIdx = isAuto ? bestIdx : Math.max(0, Math.min(list.length - 1, parseInt(pickRaw, 10) || 0));\n    const options = list.map((o, i) => {\n      const fits = needed <= o.cap;\n      const isBest = i === bestIdx;\n      const runs = Math.ceil(needed / o.cap);\n      const runsLabel = s.mode === 'truck' ? runs + ' trips' : runs + ' units';\n      const status = isBest ? (noFit ? runsLabel : 'Best fit') : (fits ? 'Extra room' : runsLabel);\n      return {\n        name: o.name, sub: o.sub, cap: o.cap.toLocaleString(),\n        pct: Math.min(100, Math.round(needed / o.cap * 100)),\n        status,\n        border: i === selIdx ? accent : '#DCE2E8',\n        tagBg: isBest ? accent : (fits ? '#E3EEF8' : '#ECEFF2'),\n        tagFg: isBest ? '#FFFFFF' : (fits ? '#1B4F7A' : '#56626E'),\n        barColor: fits ? (isBest ? accent : '#5B8DB8') : '#8A96A1'\n      };\n    });\n    const b = list[selIdx];\n    const overflow = totalItems > 0 && needed > b.cap;\n    const pct = Math.min(100, Math.round(needed / b.cap * 100));\n    const spare = b.cap - needed;\n    const count = Math.ceil(needed / b.cap);\n    const best = {\n      name: b.name,\n      cap: b.cap.toLocaleString(),\n      pct,\n      summary: totalItems === 0\n        ? 'Add some boxes to see how full it gets.'\n        : (spare >= 0 ? pct + '% full \u00b7 about ' + spare.toLocaleString() + ' cu ft to spare' : 'Your load is bigger than this size holds.')\n    };\n    // Isometric container, drawn at one shared scale per mode so sizes compare\n    const L = b.l, W = b.w, H = b.h;\n    const sc = Math.min(330 / ((L + W) * C), 202 / ((L + W) * 0.5 + H));\n    const P = projector(170 - (L - W) * C * sc / 2, 105 - ((L + W) * 0.5 * sc - H * sc) / 2, sc);\n    const frac = totalItems === 0 ? 0 : Math.min(1, needed / b.cap);\n    const fl = L * frac, fh = H * 0.92;\n    let seams = '';\n    if (fl > 0) {\n      const cell = 2;\n      for (let x = cell; x < fl - 0.2; x += cell) {\n        seams += seg(P, [x, W, 0], [x, W, fh]) + seg(P, [x, 0, fh], [x, W, fh]);\n      }\n      for (let z = cell; z < fh - 0.2; z += cell) {\n        seams += seg(P, [0, W, z], [fl, W, z]) + seg(P, [fl, 0, z], [fl, W, z]);\n      }\n      for (let y = cell; y < W - 0.2; y += cell) {\n        seams += seg(P, [fl, y, 0], [fl, y, fh]) + seg(P, [0, y, fh], [fl, y, fh]);\n      }\n    }\n    const iso = {\n      floor: poly(P, [[0, 0, 0], [L, 0, 0], [L, W, 0], [0, W, 0]]),\n      back: poly(P, [[0, 0, 0], [0, W, 0], [0, W, H], [0, 0, H]]),\n      side: poly(P, [[0, 0, 0], [L, 0, 0], [L, 0, H], [0, 0, H]]),\n      fillTop: poly(P, [[0, 0, fh], [fl, 0, fh], [fl, W, fh], [0, W, fh]]),\n      fillLeft: poly(P, [[0, W, 0], [fl, W, 0], [fl, W, fh], [0, W, fh]]),\n      fillRight: poly(P, [[fl, 0, 0], [fl, W, 0], [fl, W, fh], [fl, 0, fh]]),\n      seams: seams || 'M0,0',\n      front: seg(P, [L, 0, H], [L, W, H]) + 'L' + fmt(P(0, W, H)) + seg(P, [L, W, 0], [L, W, H]) + seg(P, [L, 0, 0], [L, W, 0]) + 'L' + fmt(P(0, W, 0)),\n      caption: (s.mode === 'truck' ? 'Loaded from the cab toward the door' : 'Stacked from the back wall toward the door') + ' \u00b7 ' + L + ' \u00d7 ' + W + ' \u00d7 ' + H + ' ft'\n    };\n\n    const overflowNote = s.mode === 'truck'\n      ? 'Plan on ' + count + ' trips, or book 2 trucks.'\n      : 'You\u2019ll need about ' + count + ' units of this size.';\n\n    return {\n      accent, buffer, items, presets, totalItems, pile,\n      needed: needed.toLocaleString(),\n      isCount: s.tab === 'boxes' || s.tab === 'view',\n      isMatch: s.tab === 'match',\n      isStart: s.tab === 'start',\n      appH: APP_H, logoTop, titleTop, taglineTop,\n      ppTotalsH: s.ppAnim ? 80 : 0,\n      ppTotalsOpacity: s.ppAnim ? 1 : 0,\n      ppListOpacity: s.ppAnim ? 0 : 1,\n      ppListShift: s.ppAnim ? 28 : 0,\n      ppBackLabel: s.ppAnim ? 'Start over' : 'Back',\n      ppNeeded: s.ppNeeded || '0',\n      hasSaved, savedRows, defaultMoveName,\n      draftName: s.draftName || '',\n      setDraftName: (e) => this.setState({ draftName: e.target.value }),\n      saveLabel: s.savedFlash ? 'Saved' : (isSavedCurrent ? 'Update' : 'Save'),\n      saveBg: s.savedFlash ? '#2D6A45' : accent,\n      saveMove: () => {\n        if (totalItems === 0) return;\n        const st = this.state;\n        const id = st.currentSaveId || Date.now();\n        const rec = {\n          id, name: (st.draftName || '').trim() || defaultMoveName, savedAt: Date.now(),\n          counts: { ...st.counts }, customs: (st.customs || []).map((c) => ({ ...c })), preset: st.preset,\n          startedWith: st.startedWith || 'boxes', startedPresetLabel: st.startedPresetLabel || null,\n          needed, totalItems\n        };\n        const next = [rec].concat((st.saved || []).filter((x) => x.id !== id)).slice(0, 20);\n        this.writeStore('stackwise.saved', next);\n        this.setState({ saved: next, currentSaveId: id, draftName: rec.name, savedFlash: true });\n        clearTimeout(this._flashTimer);\n        this._flashTimer = setTimeout(() => this.setState({ savedFlash: false }), 1800);\n      },\n      toggleDetails: () => this.setState({ showDetails: !this.state.showDetails }),\n      detailsExpanded: s.showDetails ? 'true' : 'false',\n      detailsLabel: s.showDetails ? 'Hide details' : 'View details',\n      detailsChevron: s.showDetails ? 'rotate(-90deg)' : 'rotate(90deg)',\n      detailsMax: s.showDetails ? APP_H - 226 : 0,\n      cuSize: s.showDetails ? 56 : 42,\n      detailsOpacity: s.showDetails ? 1 : 0,\n      fabOpacity: s.showDetails ? 0 : 1,\n      fabPE: s.showDetails ? 'none' : 'auto',\n      recTruck, recStorage, detailRows,\n      hasDetailRows: detailRows.length > 0,\n      noDetailRows: detailRows.length === 0,\n      isPresetPick: s.tab === 'presets',\n      goStart: () => this.setState({ tab: 'start', sheetUp: false, showDetails: false }),\n      startBoxes: () => this.slideTo(started ? { tab: 'boxes' } : { tab: 'boxes', startedWith: 'boxes' }, 'boxes'),\n      clearAll: () => this.setState({ preset: 'custom', customs: [], startedWith: null, startedPresetLabel: null, showDetails: false, currentSaveId: null, draftName: '', counts: { small: 0, medium: 0, large: 0, xl: 0, wardrobe: 0, dish: 0, furniture: 0 } }),\n      started, boxesCard, presetCard,\n      boxesSelStr: boxesSel ? 'true' : 'false',\n      presetSelStr: presetSel ? 'true' : 'false',\n      taglineOpacity: (s.sheetUp || started || hasSaved) ? 0 : 1,\n      startPreset: () => this.slideTo({ tab: 'presets' }, 'presets'),\n      sheetTop: s.sheetUp ? (s.slideTarget === 'presets' ? 82 : 154) : (hasSaved ? APP_H - 460 : (started ? APP_H - 448 : APP_H - 378)),\n      sheetBg: s.sheetUp ? '#F4F6F8' : '#FFFFFF',\n      logoTf: s.sheetUp ? 'translate(206px, ' + (33 - logoTop) + 'px) scale(0.2708)' : 'translate(0px, 0px) scale(1)',\n      titleTf: s.sheetUp ? 'translate(242px, ' + (36 - titleTop) + 'px) scale(0.4167)' : 'translate(0px, 0px) scale(1)',\n      upOpacity: s.sheetUp ? 0 : 1,\n      ghostOpacity: s.sheetUp ? 1 : 0,\n      ghostBack: s.slideTarget === 'presets',\n      ghostStart: s.slideTarget !== 'presets',\n      sheetMin: s.sheetUp ? 864 : 360,\n      sheetRadius: s.sheetUp ? 0 : 30,\n      heroOpacity: s.sheetUp ? 0 : 1,\n      showMatch: () => this.setState({ tab: 'match' }),\n      navBoxesCur: (s.tab === 'boxes' || s.tab === 'view') ? 'page' : 'false',\n      navViewCur: s.tab === 'view' ? 'page' : 'false',\n      navMatchCur: s.tab === 'match' ? 'page' : 'false',\n      navBoxesColor: (s.tab === 'boxes' || s.tab === 'view') ? '#14202B' : '#56626E',\n      navViewColor: s.tab === 'view' ? '#14202B' : '#56626E',\n      navMatchColor: s.tab === 'match' ? '#14202B' : '#56626E',\n      navBoxesPill: (s.tab === 'boxes' || s.tab === 'view') ? '#F3E1D3' : 'transparent',\n      navViewPill: s.tab === 'view' ? '#F3E1D3' : 'transparent',\n      navMatchPill: s.tab === 'match' ? '#F3E1D3' : 'transparent',\n      goMatch: () => this.setState({ screen: 'match' }),\n      goCount: () => this.setState({ screen: 'count' }),\n      reset: () => this.setState({ preset: 'custom', customs: [], counts: { small: 0, medium: 0, large: 0, xl: 0, wardrobe: 0, dish: 0, furniture: 0 } }),\n      customRows,\n      hasCustoms: customRows.length > 0,\n      draftL: s.draft.l, draftW: s.draft.w, draftH: s.draft.h, draftQty: s.draft.qty,\n      setDraftL: setDraft('l'), setDraftW: setDraft('w'), setDraftH: setDraft('h'), setDraftQty: setDraft('qty'),\n      draftEach: canAdd ? ((dl * dw * dh / 1728).toFixed(1) + ' cu ft each \u00b7 ' + (dl * dw * dh / 1728 * dq).toFixed(1) + ' cu ft total') : 'Enter length, width and height',\n      addBg: canAdd ? '#14202B' : '#8A96A1',\n      addCustom: () => {\n        if (!canAdd) return;\n        const id = this.state.nextCustomId;\n        this.setState({\n          customs: this.state.customs.concat([{ id, l: dl, w: dw, h: dh, qty: dq }]),\n          nextCustomId: id + 1,\n          draft: { l: '', w: '', h: '', qty: '1' }\n        });\n      },\n      pickTruck: () => this.setState({ mode: 'truck', category: s.category === 'room' ? 'room' : 'truck' }),\n      pickStorage: () => this.setState({ mode: 'storage', category: s.category === 'room' ? 'room' : 'storage' }),\n      truckSel: s.mode === 'truck' ? 'true' : 'false',\n      storageSel: s.mode === 'storage' ? 'true' : 'false',\n      truckBg: s.mode === 'truck' ? '#FFFFFF' : 'transparent',\n      storageBg: s.mode === 'storage' ? '#FFFFFF' : 'transparent',\n      recLabel: isAuto\n        ? 'Best fit'\n        : (s.mode === 'truck' ? 'Your truck' : 'Your storage unit') + (selIdx === bestIdx && !noFit ? ' \u00b7 best fit' : ''),\n      tabBoxes: s.tab === 'boxes',\n      tabView: s.tab === 'view',\n      tabBoxesSel: s.tab !== 'view' ? 'true' : 'false',\n      tabViewSel: s.tab === 'view' ? 'true' : 'false',\n      tabBoxesBg: s.tab !== 'view' ? '#FFFFFF' : 'transparent',\n      tabViewBg: s.tab === 'view' ? '#FFFFFF' : 'transparent',\n      showBoxes: () => this.setState({ tab: 'boxes' }),\n      showView: () => this.setState({ tab: 'view' }),\n      category: s.category,\n      catRoom: true,\n      catStorage: s.category === 'storage',\n      catTruck: s.category === 'truck',\n      catFit: false,\n      pickCategory: (e) => {\n        const v = e.target.value;\n        if (v === 'truck' || v === 'storage') this.setState({ category: v, mode: v });\n        else this.setState({ category: 'room' });\n      },\n      fitTag: totalItems === 0 ? 'Empty' : (overflow ? count + (s.mode === 'truck' ? ' trips' : ' units') : best.pct + '% full'),\n      fitColor: overflow ? '#9A4A1A' : '#2D6A45',\n      isTruck: s.mode === 'truck',\n      isStorage: s.mode === 'storage',\n      truckPick: s.truckPick,\n      storagePick: s.storagePick,\n      chooseTruck: (e) => this.setState({ truckPick: e.target.value }),\n      chooseStorage: (e) => this.setState({ storagePick: e.target.value }),\n      presetVal: PRESETS[s.preset] ? s.preset : 'custom',\n      pickRoom: (e) => {\n        const k = e.target.value;\n        if (PRESETS[k]) this.setState({ preset: k, counts: { ...PRESETS[k].counts } });\n        else this.setState({ preset: 'custom' });\n      },\n      options, best, overflow, overflowNote, iso\n    };\n  }\n}\n";
+
+(function () {
+  var P = window.preact, h = P.h, render = P.render, Fragment = P.Fragment;
+  var tplRoot = document.getElementById('tpl').content;
+  var HOLE = /\{\{\s*([^}]+?)\s*\}\}/g;
+  var EVT = { onclick: 'onClick', onchange: 'onChange', oninput: 'onInput' };
+
+  function look(path, sc) {
+    path = path.trim();
+    if (path === 'true') return true;
+    if (path === 'false') return false;
+    if (/^-?\d+(\.\d+)?$/.test(path)) return +path;
+    var parts = path.split('.');
+    for (var i = 0; i < sc.length; i++) {
+      var scope = sc[i];
+      if (scope && Object.prototype.hasOwnProperty.call(scope, parts[0])) {
+        var v = scope[parts[0]];
+        for (var j = 1; j < parts.length; j++) v = v == null ? undefined : v[parts[j]];
+        return v;
+      }
+    }
+    return undefined;
+  }
+  function interp(str, sc) {
+    var whole = str.match(/^\{\{\s*([^}]+?)\s*\}\}$/);
+    if (whole) return look(whole[1], sc);
+    return str.replace(HOLE, function (_, p) { var v = look(p, sc); return v == null ? '' : String(v); });
+  }
+  function kids(node, sc) {
+    var out = [];
+    node.childNodes.forEach(function (c) {
+      var r = build(c, sc);
+      if (r != null && r !== false) out.push(r);
+    });
+    return out;
+  }
+  function build(node, sc) {
+    if (node.nodeType === 3) {
+      var t = node.nodeValue;
+      if (!t.trim() && t.indexOf('\n') >= 0) return null;
+      return t.indexOf('{{') >= 0 ? interp(t, sc) : t;
+    }
+    if (node.nodeType !== 1) return null;
+    var tag = node.localName;
+    if (tag === 'sc-if') return interp(node.getAttribute('value') || '', sc) ? kids(node, sc) : null;
+    if (tag === 'sc-for') {
+      var list = interp(node.getAttribute('list') || '', sc) || [];
+      var as = node.getAttribute('as');
+      return list.map(function (it, i) { var s = {}; s[as] = it; s.$index = i; return kids(node, [s].concat(sc)); });
+    }
+    var props = {};
+    for (var k = 0; k < node.attributes.length; k++) {
+      var a = node.attributes[k], n = a.name;
+      if (n.indexOf('hint-') === 0) continue;
+      var v = a.value.indexOf('{{') >= 0 ? interp(a.value, sc) : a.value;
+      if (EVT[n]) {
+        n = EVT[n];
+        if (n === 'onChange' && (tag === 'input' || tag === 'textarea')) n = 'onInput';
+      }
+      props[n] = v;
+    }
+    if (tag === 'input' && props.value == null) props.value = '';
+    return h(tag, props, kids(node, sc));
+  }
+
+  var pending = [], scheduled = false, comp;
+  function DCLogic(props) { this.props = props || {}; this.state = {}; }
+  DCLogic.prototype.setState = function (p, cb) {
+    var next = typeof p === 'function' ? p(this.state, this.props) : p;
+    this.state = Object.assign({}, this.state, next);
+    if (cb) pending.push(cb);
+    schedule();
+  };
+  DCLogic.prototype.forceUpdate = function () { schedule(); };
+  function schedule() {
+    if (scheduled) return;
+    scheduled = true;
+    Promise.resolve().then(function () {
+      scheduled = false;
+      draw();
+      var cbs = pending; pending = [];
+      cbs.forEach(function (f) { f(); });
+    });
+  }
+
+  var vp = document.getElementById('viewport');
+  var stage = document.getElementById('stage');
+  var app = document.getElementById('app');
+  var probe = document.getElementById('safe-probe');
+  function insets() {
+    var cs = getComputedStyle(probe);
+    return { top: parseFloat(cs.paddingTop) || 0, bottom: parseFloat(cs.paddingBottom) || 0 };
+  }
+  function fit() {
+    var vw = vp.clientWidth, vh = vp.clientHeight;
+    var framed = vw > 520;
+    document.body.classList.toggle('framed', framed);
+    var sc, H, top, padTop = 0, padBottom = 0;
+    if (framed) {
+      // desktop / tablet: show a phone-sized screen, like the design canvas
+      H = 844;
+      sc = Math.min((vw - 48) / 390, (vh - 48) / 844, 1.25);
+      top = Math.max(0, (vh - 844 * sc) / 2);
+    } else {
+      // phone: the app fills the whole window, including behind the status bar and home bar;
+      // content stays inside the safe area, the edges take the header / drawer colors
+      var ins = insets();
+      // scale the whole 390 x 844 design to fit the visible area (like the design canvas)
+      sc = Math.min(vw / 390, (vh - ins.top - ins.bottom) / 844);
+      padTop = ins.top / sc;
+      padBottom = ins.bottom / sc;
+      var total = Math.floor(vh / sc);
+      H = Math.max(844, Math.floor(total - padTop - padBottom));
+      top = 0;
+    }
+    stage.style.transform = 'scale(' + sc + ')';
+    stage.style.height = (H + padTop + padBottom) + 'px';
+    stage.style.top = top + 'px';
+    stage.style.left = Math.max(0, (vw - 390 * sc) / 2) + 'px';
+    app.style.paddingTop = padTop + 'px';
+    app.style.paddingBottom = padBottom + 'px';
+    var st = comp.state || {};
+    var bottomColor = st.tab === 'start' ? '#FFFFFF' : '#F4F6F8';
+    var edges = 'linear-gradient(to bottom, #14202B 0%, #14202B 50%, ' + bottomColor + ' 50%, ' + bottomColor + ' 100%)';
+    stage.style.background = framed ? '#14202B' : edges;
+    document.documentElement.style.background = framed ? '#E9E8E4' : edges;
+    return H;
+  }
+  function draw() {
+    comp.props.appH = fit();
+    var vals = comp.renderVals();
+    render(h(Fragment, null, kids(tplRoot, [vals])), app);
+  }
+
+  var Component = new Function('DCLogic', COMPONENT_SRC + '\nreturn Component;')(DCLogic);
+  comp = new Component({ accent: '#B4561F', buffer: 15 });
+  comp.props = Object.assign({ accent: '#B4561F', buffer: 15 }, comp.props);
+  draw();
+  window.addEventListener('resize', schedule);
+  window.addEventListener('orientationchange', schedule);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', schedule);
+})();
+
+</script>
+</body>
+</html>
